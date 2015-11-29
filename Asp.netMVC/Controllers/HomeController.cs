@@ -12,19 +12,18 @@ namespace Asp.netMVC.Controllers
 		{
 			return View();
 		}
-
-		public ActionResult About()
+		public ActionResult LogIn()
 		{
-			ViewBag.Message = "Your application description page.";
-
 			return View();
 		}
-
-		public ActionResult Contact()
+		public ActionResult Register()
 		{
-			ViewBag.Message = "Your contact page.";
-
 			return View();
+		}
+		public ActionResult LogOff()
+		{
+			Session["user"] = null;
+			return RedirectToAction("Index");
 		}
 	}
 }
