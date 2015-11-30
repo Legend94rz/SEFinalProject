@@ -1,4 +1,8 @@
 *.suo
+*.dll
+*.exe
+*.pdb
+*.cache
 /.vs
 /DAL/obj/Debug
 /DAL/obj/Release
@@ -8,3 +12,6 @@
 /UnitTest/obj/Release
 /UnitTestDAL/obj/Debug
 /UnitTestDAL/obj/Release
+/Asp.netMVC/obj/Debug
+/Asp.netMVC/obj/Release
+Dal_config.cs

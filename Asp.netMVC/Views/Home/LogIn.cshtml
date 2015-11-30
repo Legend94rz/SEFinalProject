@@ -1,7 +1,16 @@
-﻿
+﻿@using Asp.netMVC.Models;
 @{
-    ViewBag.Title = "LogIn";
+	ViewBag.Title = "LogIn";
 }
+@model UserViewModel
+<h2>实现用户登录。目前密码输入不正确没有任何提示</h2>
 
-<h2>实现用户登录。如果用户提交的用户名、密码正确，执行Session["user"]=DAL.User.Get(用户名)让标题栏显示用户的姓名并提供注销(这里我写好了)。</h2>
-
+<div class="container">
+	@using (Html.BeginForm("LogIn", "Home", FormMethod.Post,new { @class= "form-signin"}))
+	{
+		@Html.AntiForgeryToken();
+		@Html.TextBoxFor(m => m.Username, new {@class = "form-control",placeHolder = "用户名" })
+		@Html.PasswordFor(m=>m.Password,new {@class ="form-control",placeHolder ="密码" })
+		<button class="btn btn-lg btn-primary btn-block" type="submit">登录</button>
+   }
+</div>

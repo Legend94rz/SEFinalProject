@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Asp.netMVC.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
@@ -16,6 +17,22 @@ namespace Asp.netMVC.Controllers
 		{
 			return View();
 		}
+		[HttpPost]
+		public ActionResult LogIn(UserViewModel model)
+		{
+			Model.User user = DAL.User.Get(model.Username);
+			if (user != null && user.password == model.Password)
+			{
+				Session["user"] = user;
+				return RedirectToAction("Index");
+			}
+			else
+			{
+				Session["user"] = null;
+				return View();
+			}
+		}
+
 		public ActionResult Register()
 		{
 			return View();
@@ -24,6 +41,10 @@ namespace Asp.netMVC.Controllers
 		{
 			Session["user"] = null;
 			return RedirectToAction("Index");
+		}
+		public ActionResult UserManage()
+		{
+			return View();
 		}
 	}
 }

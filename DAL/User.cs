@@ -38,7 +38,8 @@ namespace DAL
 			return new Model.User() {
 				username = (string)dataRow["username"],
 				password = (string)dataRow["password"],
-				name=(string)dataRow["name"]
+				name = (string)dataRow["name"],
+				permission = (int)dataRow["permission"]
 			};
 		}
 		public static bool Add(Model.User user)
