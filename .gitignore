@@ -1,2 +1,10 @@
 *.suo
-.vs
+/.vs
+/DAL/obj/Debug
+/DAL/obj/Release
+/Model/obj/Debug
+/Model/obj/Release
+/UnitTest/obj/Debug
+/UnitTest/obj/Release
+/UnitTestDAL/obj/Debug
+/UnitTestDAL/obj/Release
