@@ -2,19 +2,215 @@
 @{
 	ViewBag.Title = "数据查询/分析";
 }
-
-<h2>首先为项目名称（是什么，下拉菜单）、中标单位（是什么，下拉菜单）、中标金额（下限~上限，两个编辑框）、中标时间（早~晚，两个固定格式的编辑框，比如仅允许输入yyyy-MM-dd格式的）提供筛选，这四个选项前都要有多选框，表示是否启用这一条件</h2>
-<h2>提供一个“筛选”按钮来按照上一步设置的条件筛选并显示结果</h2>
-<h2>根据筛选结果，如果所有结果都来自同一单位，那么显示两个按钮：历史金额趋势、中标金额汇总；否则，只显示中标金额汇总这一个按钮</h2>
-<h2>点击历史金额趋势按钮，以时间为x轴，金额为y轴画出折线图</h2>
-<h2>点击中标金额汇总按钮，以表格形式汇总每个单位的中标金额，并显示</h2>
-<table border="1">
-	<tr>
-		<td>单位</td>
-		<td>金额</td>
-	</tr>
-	<tr>
-		<td>我是一个单位名称</td>
-		<td>我是该单位的中标金额之和</td>
-	</tr>
+@model List<Model.Data>
+@*<h2>首先为项目名称（是什么，下拉菜单）、中标单位（是什么，下拉菜单）、中标金额（下限~上限，两个编辑框）、中标时间（早~晚，两个固定格式的编辑框，比如仅允许输入yyyy-MM-dd格式的）提供筛选，这四个选项前都要有多选框，表示是否启用这一条件</h2>
+	<h2>提供一个“筛选”按钮来按照上一步设置的条件筛选并显示结果</h2>
+	<h2>根据筛选结果，如果所有结果都来自同一单位，那么显示两个按钮：历史金额趋势、中标金额汇总；否则，只显示中标金额汇总这一个按钮</h2>
+	<h2>点击历史金额趋势按钮，以时间为x轴，金额为y轴画出折线图</h2>
+	<h2>点击中标金额汇总按钮，以表格形式汇总每个单位的中标金额，并显示</h2>
+	<table border="1">
+		<tr>
+			<td>单位</td>
+			<td>金额</td>
+		</tr>
+		<tr>
+			<td>我是一个单位名称</td>
+			<td>我是该单位的中标金额之和</td>
+		</tr>
+	</table>*@
+<h2 class="sub-header">筛选条件：</h2>
+<div class="jumbotron">
+	@using (Html.BeginForm("Analysis", "DataAnalysis", FormMethod.Get))
+	{
+		<div class="row">
+			<div class="col-md-6">
+				项目名称
+			</div>
+			<div class="col-md-6">
+				中标单位名称
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-md-6">
+				@Html.DropDownList("name", null, new { @class = "form-control" })
+			</div>
+			<div class="col-md-6">
+				@Html.DropDownList("com", null, new { @class = "form-control" })
+			</div>
+		</div>
+		<br />
+		<div class="row">
+			<div class="col-md-6">
+				@Html.TextBox("lowTime", null, new { @class = "form-control", placeHolder = "开始时间,格式yyyy-MM-dd,不需要则留空" })
+			</div>
+			<div class="col-md-6">
+				@Html.TextBox("highTime", null, new { @class = "form-control", placeHolder = "结束时间,格式yyyy-MM-dd,不需要则留空" })
+			</div>
+		</div>
+		<br />
+		<div class="row">
+			<div class="col-md-6">
+				@Html.TextBox("lowMoney", null, new { @class = "form-control", placeHolder = "金额下限,不需要则留空" })
+			</div>
+			<div class="col-md-6">
+				@Html.TextBox("highMoney", null, new { @class = "form-control", placeHolder = "金额上限,不需要则留空" })
+			</div>
+		</div>
+		<br />
+		<div class="row right text-right">
+			<button type="submit" class="btn btn-default">筛选</button>
+		</div>
+	}
+</div>
+<h2 class="sub-header">所得数据：</h2>
+<table class="table table-striped">
+	<thead>
+		<tr>
+			<th><button id="selectAll" onclick='select()' class="btn btn-info">全选</button></th>
+			<th>名称</th>
+			<th>单位</th>
+			<th>金额</th>
+			<th>时间</th>
+		</tr>
+	</thead>
+	<tbody>
+		@for (int i = 0; i < Model.Count; i++)
+		{
+			<tr>
+				<th scope="row"><input class="checkbox" type="checkbox" value="@Model[i].Id.ToString()" name="checkbox" onchange="change(@i)" /></th>
+				<td>@Model[i].ProjectName</td>
+				<td>@Model[i].WinCom</td>
+				<td>@Model[i].Money</td>
+				<td>@Model[i].Time.ToShortDateString()</td>
+			</tr>
+		}
+	</tbody>
 </table>
+<div class="row right text-right">
+	<button onclick="plot()" class="btn btn-primary">分析</button>
+</div>
+
+<div id="graph"></div>
+
+@section Scripts{
+	<script src="~/Scripts/Chart.min.js"></script>
+	<script>
+		var checked={};
+		var mod = @Html.Raw(Json.Encode(Model));
+		var boxes = document.getElementsByName("checkbox");
+		for(var i=0;i<boxes.length;i++)
+		{
+			checked[boxes[i].value]=false;
+		}
+		function change(index)
+		{
+			checked[boxes[index].value]= !checked[boxes[index].value];
+		}
+		function select(text)
+		{
+			console.log($("#selectAll").text());
+			if($("#selectAll").text()=="全选")
+			{
+				$("#selectAll").text("反选");
+				for(var i=0;i<boxes.length;i++)
+				{
+					boxes[i].checked = true;
+					checked[boxes[i].value] = true;
+				}
+			}
+			else
+			{
+				$("#selectAll").text("全选");
+				for(var i=0;i<boxes.length;i++)
+				{
+					boxes[i].checked = false;
+					checked[boxes[i].value] = false;
+				}
+			}
+		}
+		function isFromOneCom()
+		{
+			m={};
+			var x=0;
+			for(var i=0;i<mod.length;i++)
+			{
+				if(checked[mod[i].Id])
+				{
+					if( m[mod[i].WinCom] == null)
+					{
+						m[mod[i].WinCom] = 0;
+						x++;
+					}
+					m[mod[i].WinCom]+=mod[i].Money;
+				}
+			}
+			return [x==1,m];
+		}
+		function plot()
+		{
+			$("#mychart").remove();
+			$("#mypiechart").remove();
+			var t=isFromOneCom();
+			if(t[0])
+			{
+				$("#graph").append('<canvas id="mychart" width="400" height="400"></canvas>');
+				var ctx = document.getElementById("mychart").getContext("2d");
+
+				var Dataset=[];
+				point = [];
+				for(var i=0;i<mod.length;i++)
+				{
+					if(checked[mod[i].Id])
+					{
+						point.push({
+							x:new Date(Number( mod[i].Time.slice(6,-2) )).toLocaleDateString(),
+							y:Number(mod[i].Money)
+						});
+					}
+				}
+				point.sort(function sort(a,b){
+					return a.x>b.x;
+				});
+
+				var Labels=[];
+				var Data=[];
+				for(var i=0;i<point.length;i++)
+				{
+					Labels.push(point[i].x);
+					Data.push(point[i].y);
+				}
+				var R = Math.floor( Math.random()*255 );
+				var G = Math.floor( Math.random()*255 );
+				var B = Math.floor( Math.random()*255 );
+				Dataset.push({
+					fillColor: "rgba("+R+","+G+","+B+","+0.5+")",
+					strokeColor: "rgba("+R+","+G+","+B+","+1+")",
+					pointColor: "rgba("+R+","+G+","+B+","+1+")",
+					pointStrokeColor: "#fff",
+					data:Data
+				});
+				var data = {
+					labels: Labels,
+					datasets: Dataset
+				};
+				new Chart(ctx).Line(data);
+			}
+			$("#graph").append('<canvas id="mypiechart" width="400" height="400"></canvas>');
+			ctx = document.getElementById("mypiechart").getContext("2d");
+			data = [];
+			for(var key in t[1])
+			{
+				var R = Math.floor( Math.random()*255 );
+				var G = Math.floor( Math.random()*255 );
+				var B = Math.floor( Math.random()*255 );
+
+				data.push({
+					value:t[1][key],
+					color:"rgba("+R+","+G+","+B+","+1+")",
+					label:key
+				});
+			}
+			new Chart(ctx).Pie(data);
+		}
+	</script>
+}

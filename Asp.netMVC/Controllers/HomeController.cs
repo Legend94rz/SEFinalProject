@@ -1,8 +1,4 @@
 ﻿using Asp.netMVC.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
 using System.Web.Mvc;
 
 namespace Asp.netMVC.Controllers
@@ -20,6 +16,7 @@ namespace Asp.netMVC.Controllers
 		[HttpPost]
 		public ActionResult LogIn(UserViewModel model)
 		{
+			if (model==null) return View();
 			Model.User user = DAL.User.Get(model.Username);
 			if (user != null && user.password == model.Password)
 			{
@@ -28,8 +25,9 @@ namespace Asp.netMVC.Controllers
 			}
 			else
 			{
+				ViewBag.msg = "用户名或密码错误";
 				Session["user"] = null;
-				return View();
+				return View(model);
 			}
 		}
 
