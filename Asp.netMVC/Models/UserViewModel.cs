@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace Asp.netMVC.Models
 {
@@ -9,5 +6,6 @@ namespace Asp.netMVC.Models
 	{
 		public string Username { get; set; }
 		public string Password { get; set; }
+		public bool? isCorrect { get; set; }
 	}
 }

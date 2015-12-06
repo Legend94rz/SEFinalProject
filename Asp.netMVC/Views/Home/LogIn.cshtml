@@ -1,16 +1,55 @@
-﻿@using Asp.netMVC.Models;
-@{
+﻿@{
 	ViewBag.Title = "LogIn";
 }
-@model UserViewModel
-<h2>实现用户登录。目前密码输入不正确没有任何提示</h2>
+@model Asp.netMVC.Models.UserViewModel
 
+<div class="page-header">
+	<h1>登录</h1>
+</div>
 <div class="container">
-	@using (Html.BeginForm("LogIn", "Home", FormMethod.Post,new { @class= "form-signin"}))
+	@if (ViewBag.msg != null)
+	{
+		<div class="alert alert-danger alert-dismissible" role="alert">
+			<button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+			用户名或密码错误
+		</div>
+	}
+	
+	@using (Html.BeginForm("LogIn", "Home", FormMethod.Post,new { @class= "form-signin",onsubmit= "return validate_form(this)" }))
 	{
 		@Html.AntiForgeryToken();
-		@Html.TextBoxFor(m => m.Username, new {@class = "form-control",placeHolder = "用户名" })
-		@Html.PasswordFor(m=>m.Password,new {@class ="form-control",placeHolder ="密码" })
+		@Html.TextBox("Username",null, new {@class = "form-control",placeHolder = "用户名" })
+		<div class="text-danger" hidden="hidden" id="requireUsername">
+			<ul>
+				<li>用户名是必需的</li>
+			</ul>
+		</div>
+		<br />
+		@Html.Password("Password",null,new {@class ="form-control",placeHolder ="密码" })
+		<div class="text-danger" hidden="hidden" id="requirePassword">
+			<ul>
+				<li>密码是必需的</li>
+			</ul>
+		</div>
+		<br />
 		<button class="btn btn-lg btn-primary btn-block" type="submit">登录</button>
    }
 </div>
+<script>
+	function validate(form,childId,msgId) {
+		if (form[childId].value == null || form[childId].value == "") {
+			document.getElementById(msgId).hidden = false;
+			return false;
+		}
+		else {
+			document.getElementById(msgId).hidden = true;
+			return true;
+		}
+	}
+	function validate_form(thisform) {
+		if (validate(thisform, "Username", "requireUsername"))
+			return validate(thisform, "Password", "requirePassword");
+		else
+			return false;
+	}
+</script>
