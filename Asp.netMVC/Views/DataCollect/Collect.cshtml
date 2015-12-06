@@ -1,10 +1,49 @@
 ﻿
 @{
-    ViewBag.Title = "数据采集";
+	ViewBag.Title = "数据采集";
 }
+@model List<Model.UrlInfo>
 
 <h2>在这里列出所有网址，每条网址前有多选框，以及一个开始采集按钮（采集进度视情况写或不写）</h2>
 <h2>点击按钮，开始爬每个选中的网址</h2>
 <h2>每搜集到一个数据，写进数据库(Data表)</h2>
 
 
+@using (Html.BeginForm("Collect", "DataCollect", FormMethod.Post,new { onsubmit= "hidebtn()" }))
+{
+	<table border="1">
+		<tr>
+			<td>
+				选择
+			</td>
+			<td>
+				地区
+			</td>
+			<td>
+				网址
+			</td>
+		</tr>
+
+		@for (int i = 0; i < Model.Count; i++)
+		{
+			<tr>
+				<td>
+					<input class="checkbox" type="checkbox" name="@Model[i].Id.ToString()" checked="checked" />
+				</td>
+				<td>
+					@Model[i].Region
+				</td>
+				<td>
+					@Model[i].Url
+				</td>
+			</tr>
+		}
+	</table>
+	<button class="btn btn-default btn-lg" type="submit" id="start">开始采集</button>
+}
+<script>
+	function hidebtn()
+	{
+		$("#start").remove()
+	}
+</script>

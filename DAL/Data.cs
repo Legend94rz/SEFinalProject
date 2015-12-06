@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -26,11 +27,29 @@ namespace DAL
 				Time = DateTime.Parse(dr["Time"].ToString())
 			};
 		}
+		public static bool Add(Model.Data model)
+		{
+			string cmd = "insert into [Data] (Id,ProjectName,WinCom,Money,Time) VALUES (@Id,@ProjectName,@WinCom,@Money,@Time)";
+			SqlParameter[] p = new SqlParameter[] {
+				new SqlParameter("Id",SqlDbType.UniqueIdentifier,16),
+				new SqlParameter("ProjectName",SqlDbType.NVarChar,100),
+				new SqlParameter("WinCom",SqlDbType.NVarChar,50),
+				new SqlParameter("Money",SqlDbType.Int),
+				new SqlParameter("Time",SqlDbType.Date),
+			};
+			p[0].Value = model.Id = Guid.NewGuid();
+			p[1].Value = model.ProjectName;
+			p[2].Value = model.WinCom;
+			p[3].Value = model.Money;
+			p[4].Value = model.Time;
+			return helper.ExecuteSql(cmd, p)>0;
+		}
+
 		public static List<Model.Data> Get(string where = null)
 		{
 			List<Model.Data> res = new List<Model.Data>();
 			string cmd = "select * from [Data] ";
-			if (where != null)
+			if (where != null && where.Trim()!="")
 			{
 				cmd = cmd + " where " + where;
 			}
