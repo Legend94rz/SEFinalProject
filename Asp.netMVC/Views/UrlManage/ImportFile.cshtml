@@ -7,13 +7,17 @@
 
 </div>
 <div class="col-md-8 col-md-offset-4">
-
+    @{ var ok = "df"; }    
     <div class="add-file-button file form-group">
-        <input class="" type="text" size="20" name="upfile" id="upfile" style="border:1px dotted #ccc">
-        <input class="btn btn-primary" type="button" value="浏览" onclick="path.click()" style="border:1px solid #ccc;">
-        <button class="btn btn-success" style="border:1px solid #ccc;">上传</button>
-        <input type="file" accept=".xls,.txt" id="path" style="display:none" onchange="upfile.value=this.value">
-        <p class="help-block">只支持Txt/Excel文件。</p>
+
+            <p> int @ok</p>
+        <form id="form" name="form" enctype="multipart/form-data" method="post" action="ImportFiles" >
+            <input class="" type="text" size="20" name="upfile" id="upfile" style="border:1px dotted #ccc">
+            <input class="btn btn-primary" type="button" value="浏览" onclick="path.click()" style="border:1px solid #ccc;">
+            <input type="submit" class="btn btn-success" style="border:1px solid #ccc;" value="上传">
+            <input type="file" accept="text/plain,application/vnd.ms-excel" id="path" name="upf" style="display:none" onchange="upfile.value=this.value">
+            <p class="help-block">只支持Txt/Excel文件。</p>
+        </form>
     </div>
     <div class="col-md-5">
     </div>
