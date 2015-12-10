@@ -127,6 +127,8 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
+    <Compile Include="Models\EditTheRecord.cs" />
+    <Compile Include="Models\UrlInfo.cs" />
     <Compile Include="Models\UserViewModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\Settings.Designer.cs">
@@ -183,6 +185,9 @@
     <Content Include="Views\Home\LogIn.cshtml" />
     <Content Include="Views\Home\Register.cshtml" />
     <Content Include="Views\Home\UserManage.cshtml" />
+    <Content Include="Views\UrlManage\EditTheRecord.cshtml" />
+    <Content Include="Views\UrlManage\AddOneRecord.cshtml" />
+    <Content Include="Views\UrlManage\DeleteTheRecord.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

@@ -12,12 +12,12 @@ namespace DAL
 {
 	public class UrlInfo
 	{
-		private static DbHelperSQLP helper;
-		static UrlInfo()
-		{
-			helper = new DbHelperSQLP(Dal_config.ConnStr);
-		}
-		public static List<Model.UrlInfo> Get(string where = null)
+        private static DbHelperSQLP helper;
+        static UrlInfo()
+        {
+            helper = new DbHelperSQLP(Dal_config.ConnStr);
+        }
+        public static List<Model.UrlInfo> Get(string where = null)
 		{
 			string cmd = "select * from [UrlInfo] ";
 			if (where != null && where.Trim() != "")
