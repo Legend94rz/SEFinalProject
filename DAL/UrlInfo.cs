@@ -35,7 +35,22 @@ namespace DAL
 			}
 			return res;
 		}
-
+		//从datatable中获取数据并批量插入数据库
+		public static bool BatchInsert(DataTable dt)
+		{
+			if (dt.Rows.Count > 0)
+			{
+				foreach(DataRow dr in dt.Rows)
+				{
+                    Model.UrlInfo ul = new Model.UrlInfo();
+                    ul.Region = dr["Region"].ToString();
+                    ul.Url = dr["Url"].ToString();
+                    bool flag=Add(ul);
+				}
+				return true;
+			}
+			else return false;            
+		}
 		private static Model.UrlInfo DataRowToModel(DataRow dr)
 		{
 			return new Model.UrlInfo() {
@@ -49,9 +64,9 @@ namespace DAL
 		{
 			string cmd = "insert into [UrlInfo] (Id,Region,Url) VALUES (@id,@region,@url) ";
 			SqlParameter[] p = new SqlParameter[] {
-				new SqlParameter("id",SqlDbType.UniqueIdentifier,16),
-				new SqlParameter("region",SqlDbType.NVarChar,50),
-				new SqlParameter("url",SqlDbType.NVarChar,-1)
+				new SqlParameter("Id",SqlDbType.UniqueIdentifier,16),
+				new SqlParameter("Region",SqlDbType.NVarChar,50),
+				new SqlParameter("Url",SqlDbType.NVarChar,-1)
 			};
 			p[0].Value = model.Id = Guid.NewGuid();
 			p[1].Value = model.Region;
