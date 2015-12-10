@@ -1,41 +1,30 @@
 ﻿
 @{
-    ViewBag.Title = "手动编辑";
+	ViewBag.Title = "手动编辑";
 }
 @model List<Model.UrlInfo>
 <h2 class="sub-header">所有数据：</h2>
 <table class="table table-striped">
-    <thead>
-        <tr>
-            <th>序号</th>
-            <th>地区</th>
-            <th>链接</th>
-        </tr>
-    </thead>
-    <tbody>
-        @for (int i = 0; i < Model.Count; i++)
-        {
-            <tr>
-                <td>@Model[i].Id</td>           
-                <td>@Model[i].Region</td>
-                <td>@Model[i].Url</td>
-                <td>
-                @Html.ActionLink("Edit", "EditTheRecord", new { id = @Model[i].Id }) |
-                @Html.ActionLink("Delete", "DeleteTheRecord", new { id = @Model[i].Id })
-                </td>
-            </tr>}
-    </tbody>
+	<thead>
+		<tr>
+			<th>地区</th>
+			<th>链接</th>
+		</tr>
+	</thead>
+	<tbody>
+		@for (int i = 0; i < Model.Count; i++)
+		{
+			<tr>
+				<td>@Model[i].Region</td>
+				<td>@Model[i].Url</td>
+				<td>
+					@Html.ActionLink("Edit", "EditTheRecord", new { id = @Model[i].Id }) |
+					@Html.ActionLink("Delete", "DeleteTheRecord", new { id = @Model[i].Id })
+				</td>
+			</tr>}
+	</tbody>
 </table>
 <div class="row right text-right">
-    <button onclick="window.location.href=' AddOneRecord'" class="btn btn-primary" >添加</button>
+	<button onclick="window.location.href=' AddOneRecord'" class="btn btn-primary">添加</button>
 
 </div>
-
-@section Scripts{
-    <script>
-        function plot()
-        {
-"
-        }
-    </script>
-    }
