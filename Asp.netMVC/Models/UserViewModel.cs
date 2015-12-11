@@ -8,6 +8,6 @@ namespace Asp.netMVC.Models
         public string Password { get; set; }
         public bool? isCorrect { get; set; }
         public string Name { get; set; }
-        public string Permissione { get; set; }
+        public string Permission { get; set; }
     }
 }

@@ -74,24 +74,19 @@ namespace Asp.netMVC.Controllers
         public ActionResult UserManage()
         {
             List<Model.User> allUser = DAL.User.Get().OrderBy(x => x.username).ToList();
-            List<SelectListItem> permission = new List<SelectListItem>();
-            permission.Add(new SelectListItem { Text = "Unknown", Value = "0" });
-            permission.Add(new SelectListItem { Text = "Ordinary", Value = "1" });
-            permission.Add(new SelectListItem { Text = "Admin", Value = "2" });
-            ViewData["permission"] = permission;
             return View(allUser);
         }
 
-        public ActionResult UserDelete(string id)
+        public ActionResult UserDelete(string username)
         {           
-            Model.User user = DAL.User.Get(id);
+            Model.User user = DAL.User.Get(username);
             UserViewModel model = new UserViewModel();
             model.Username = user.username;
             model.Name = user.name;
             model.Password = user.password;
-            if (user.permission == 0) { model.Permissione = "Unknown"; }
-            else if (user.permission == 1) { model.Permissione = "Ordinary"; }
-            else { model.Permissione = "Admin"; }
+            if (user.permission == 0) { model.Permission = "Unknown"; }
+            else if (user.permission == 1) { model.Permission = "Ordinary"; }
+            else { model.Permission = "Admin"; }
             return View(model);
         }
         [HttpPost, ActionName("UserDelete")]
@@ -108,32 +103,58 @@ namespace Asp.netMVC.Controllers
         {
             Model.User user = DAL.User.Get(username);
             UserViewModel model = new UserViewModel();
+            List<string> permission = new List<string>();
+            permission.Add("Unknown");
+            permission.Add("Ordinary");
+            permission.Add("Admin");
+
             model.Username = user.username;
             model.Name = user.name;
             model.Password = user.password;
-            if (user.permission == 0) { model.Permissione = "Unknown"; }
-            else if (user.permission == 1) { model.Permissione = "Ordinary"; }
-            else { model.Permissione = "Admin"; }
+            if (user.permission == 0)
+            {
+                model.Permission = "Unknown";
+            }
+            else if (user.permission == 1)
+            {
+                model.Permission = "Ordinary";
+                permission.RemoveAt(1);
+                permission.Insert(0, model.Permission);
+            }
+            else
+            {
+                model.Permission = "Admin";
+                permission.RemoveAt(2);
+                permission.Insert(0, model.Permission);
+            }
+            
+            ViewBag.permission = new SelectList(permission);
             return View(model);
         }
 
         [HttpPost]
-        public ActionResult UserEdit(string username,UserViewModel theModel)
+        public ActionResult UserEdit(string username, string name,string password,string permission)
         {
             Model.User model = new Model.User();
-            if (theModel.Password == null || theModel.Permissione == null)
+            List<string> allPermission = new List<string>();
+            allPermission.Add("Unknown");
+            allPermission.Add("Ordinary");
+            allPermission.Add("Admin");
+            allPermission.Remove(permission);
+            allPermission.Insert(0, permission);
+            ViewBag.permission = new SelectList(allPermission);
+            if (password == null||password=="")
             {
+                ViewBag.msg = "密码不能为空";
                 return View();
             }
             model.username = username;
-            model.name = theModel.Name;
-            model.password = theModel.Password;
-            if (theModel.Permissione == "Unknown") { model.permission = 0; }
-            else if (theModel.Permissione == "Ordinary") { model.permission = 1; }
-            else if (theModel.Permissione == "Admin") { model.permission = 2; }
-            else {
-                ViewBag.mag = "用户权限只能为Unknown、Ordinary或Admin";
-                return View(); }
+            model.name = name;
+            model.password = password;
+            if (permission == "Unknown") { model.permission = 0; }
+            else if (permission == "Ordinary") { model.permission = 1; }
+            else if (permission == "Admin") { model.permission = 2; }
+            else { return View(); }
             if (DAL.User.Update(model))
                 return RedirectToAction("UserManage");
             return View();
