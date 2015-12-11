@@ -1,12 +1,52 @@
 ﻿
 @{
-	ViewBag.Title = "UserManage";
+    ViewBag.Title = "UserManage";
+}
+@model List<Model.User>
+@*<h2>列出目前所有用户，实现用户管理，包括:</h2>
+    <h2>
+        1. 指派用户权限(目前包括3种，在Model.User.PERMISSION中，Unknown与Ordinary只能查看各种数据，不能修改，Admin有全部权限)
+    </h2>
+    <h2>
+        2. 修改其他用户密码(也包括自己的)和姓名
+    </h2>*@
+
+<div class="page-header">
+    <h1>用户管理</h1>
+</div>
+@using (Html.BeginForm("UserDelete", "Home", FormMethod.Get))
+{
+<div class="container">
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>用户名</th>
+                <th>姓名</th>
+                <th>密码</th>
+                <th>用户权限</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i = 0; i < Model.Count; i++)
+            {
+                string permission;
+                if (Model[i].permission == 0) { permission = "Unknown"; }
+                else if (Model[i].permission == 1) { permission = "Ordinary"; }
+                else { permission = "Admin"; }
+
+                <tr>
+                    <td>@Model[i].username</td>
+                    <td>@Model[i].name</td>
+                    <td>@Model[i].password</td>
+                    <td>@permission</td>
+                    <td>
+                    @Html.ActionLink("编辑", "UserEdit", new { username = @Model[i].username }) |
+                    @Html.ActionLink("删除", "UserDelete", new { username = @Model[i].username })
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
 }
 
-<h2>列出目前所有用户，实现用户管理，包括:</h2>
-<h2>
-	1. 指派用户权限(目前包括3种，在Model.User.PERMISSION中，Unknown与Ordinary只能查看各种数据，不能修改，Admin有全部权限)
-</h2>
-<h2>
-	2. 修改其他用户密码(也包括自己的)和姓名
-</h2>

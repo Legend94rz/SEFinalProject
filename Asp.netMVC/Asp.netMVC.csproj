@@ -183,6 +183,8 @@
     <Content Include="Views\Home\LogIn.cshtml" />
     <Content Include="Views\Home\Register.cshtml" />
     <Content Include="Views\Home\UserManage.cshtml" />
+    <Content Include="Views\Home\UserDelete.cshtml" />
+    <Content Include="Views\Home\UserEdit.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />

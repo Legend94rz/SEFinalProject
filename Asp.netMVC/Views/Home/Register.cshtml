@@ -2,6 +2,58 @@
 @{
     ViewBag.Title = "Register";
 }
+@model Asp.netMVC.Models.UserViewModel
+@*<h2>实现用户注册。由用户输入用户名、密码、姓名，点击注册按钮之后检查是否已经存在该用户，如果不存在调用DAL.User.Add(User对象)，添加至数据库(User表)，然后跳转至首页(跳转实现方法:在相应Controller的相应方法里写return RedirectToAction("ActionName","ControllerName"))</h2>*@
 
-<h2>实现用户注册。由用户输入用户名、密码、姓名，点击注册按钮之后检查是否已经存在该用户，如果不存在调用DAL.User.Add(User对象)，添加至数据库(User表)，然后跳转至首页(跳转实现方法:在相应Controller的相应方法里写return RedirectToAction("ActionName","ControllerName"))</h2>
+<div class="page-header">
+    <h1>注册</h1>
+</div>
+<div class="container">
+    @if (ViewBag.msg != null)
+    {
+        <div class="alert alert-danger alert-dismissible" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+            用户名重复
+        </div>
+    }
 
+    @using (Html.BeginForm("Register", "Home", FormMethod.Post, new { @class = "form-signin", onsubmit = "return validate_form(this)" }))
+    {
+        @Html.AntiForgeryToken();
+        @Html.TextBox("Username", null, new { @class = "form-control", placeHolder = "用户名" })
+        <div class="text-danger" hidden="hidden" id="requireUsername">
+            <ul>
+                <li>用户名是必需的</li>
+            </ul>
+        </div>
+        <br />
+        @Html.TextBox("Name", null, new { @class = "form-control", placeHolder = "姓名" })
+        <br />
+        @Html.Password("Password", null, new { @class = "form-control", placeHolder = "密码" })
+        <div class="text-danger" hidden="hidden" id="requirePassword">
+            <ul>
+                <li>密码是必需的</li>
+            </ul>
+        </div>
+        <br />
+        <button class="btn btn-lg btn-primary btn-block" type="submit">注册</button>
+    }
+</div>
+<script>
+	function validate(form,childId,msgId) {
+		if (form[childId].value == null || form[childId].value == "") {
+			document.getElementById(msgId).hidden = false;
+			return false;
+		}
+		else {
+			document.getElementById(msgId).hidden = true;
+			return true;
+		}
+	}
+	function validate_form(thisform) {
+		if (validate(thisform, "Username", "requireUsername"))
+			return validate(thisform, "Password", "requirePassword");
+		else
+			return false;
+	}
+</script>
