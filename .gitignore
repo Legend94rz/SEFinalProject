@@ -14,6 +14,5 @@
 /UnitTestDAL/obj/Release
 /Asp.netMVC/obj/Debug
 /Asp.netMVC/obj/Release
-/DAL/Dal_config.cs
+Dal_config.cs
 /Asp.netMVC/bin
-!/Asp.netMVC/bin/Maticsoft.DBUtility.dll
