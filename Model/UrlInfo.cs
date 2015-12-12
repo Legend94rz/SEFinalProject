@@ -8,7 +8,7 @@ namespace Model
 {
 	public class UrlInfo
 	{
-        public Guid Id { get; set; }
+		public Guid Id { get; set; }
 		public string Region { get; set; }
 		public string Url { get; set; }
 	}

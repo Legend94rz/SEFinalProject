@@ -8,6 +8,7 @@
 	@Styles.Render("~/Content/css")
 	@Scripts.Render("~/bundles/modernizr")
 </head>
+@using Model
 <body>
 	<div class="navbar navbar-inverse navbar-fixed-top">
 		<div class="container">
@@ -21,15 +22,24 @@
 			</div>
 			<div class="navbar-collapse collapse">
 				<ul class="nav navbar-nav">
-					<li class="dropdown">
-						<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">网址管理<span class="caret"></span></a>
-						<ul class="dropdown-menu">
-							<li>@Html.ActionLink("文件导入", "ImportFile", "UrlManage")</li>
-							<li>@Html.ActionLink("手动编辑", "EditUrl", "UrlManage")</li>
-						</ul>
-					</li>
-					<li>@Html.ActionLink("数据采集", "Collect", "DataCollect")</li>
-					<li>@Html.ActionLink("数据查询/分析", "Analysis", "DataAnalysis")</li>
+					@if (Session["user"] != null && ((User)Session["user"]).permission > 1)
+					{
+						<li class="dropdown">
+							<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">网址管理<span class="caret"></span></a>
+							<ul class="dropdown-menu">
+								<li>@Html.ActionLink("文件导入", "ImportFile", "UrlManage")</li>
+								<li>@Html.ActionLink("手动编辑", "EditUrl", "UrlManage")</li>
+							</ul>
+						</li>
+					}
+					@if (Session["user"] != null && ((User)Session["user"]).permission > 1)
+					{
+						<li>@Html.ActionLink("数据采集", "Collect", "DataCollect")</li>
+					}
+					@if (Session["user"] != null && ((User)Session["user"]).permission > 0)
+					{
+						<li>@Html.ActionLink("数据查询/分析", "Analysis", "DataAnalysis")</li>
+					}
 				</ul>
 				<ul class="nav navbar-nav navbar-right">
 					@if (Session["user"] == null)
@@ -40,9 +50,9 @@
 					else
 					{
 						<li class="dropdown">
-							<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">@(((Model.User)Session["user"]).name)<span class="caret"></span></a>
+							<a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">@(((User)Session["user"]).name)<span class="caret"></span></a>
 							<ul class="dropdown-menu">
-								@if (((Model.User)Session["user"]).permission > 1)
+								@if (((User)Session["user"]).permission > 1)
 								{
 									<li>@Html.ActionLink("用户管理", "UserManage", "Home")</li>
 								}

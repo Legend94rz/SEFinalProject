@@ -74,11 +74,22 @@ namespace Asp.netMVC.Controllers
 		// GET: Default
 		public ActionResult ImportFile()
 		{
+			if (Session["user"] == null)
+				return RedirectToAction("LogIn", "Home");
+			else
+				if (((Model.User)Session["user"]).permission < (int)Model.User.PERMISSION.Admin)
+					return RedirectToAction("Index", "Home");
 			return View();
 		}
 		[HttpPost]
 		public ActionResult ImportFiles()
 		{
+			if (Session["user"] == null)
+				return RedirectToAction("LogIn", "Home");
+			else
+				if (((Model.User)Session["user"]).permission < (int)Model.User.PERMISSION.Admin)
+					return RedirectToAction("Index", "Home");
+
 			HttpPostedFileBase fileBase = Request.Files["upf"];
 			string fileName = fileBase.FileName;
 			string filePath = null;
@@ -145,6 +156,11 @@ namespace Asp.netMVC.Controllers
 		}
 		public ActionResult EditUrl()
 		{
+			if (Session["user"] == null)
+				return RedirectToAction("LogIn", "Home");
+			else
+				if (((Model.User)Session["user"]).permission < (int)Model.User.PERMISSION.Admin)
+					return RedirectToAction("Index", "Home");
 			string where = null;
 			List<Model.UrlInfo> allRecord = DAL.UrlInfo.Get(where).ToList();
 			return View(allRecord);
@@ -152,6 +168,12 @@ namespace Asp.netMVC.Controllers
 		[HttpGet]
 		public ActionResult EditTheRecord(Guid? id)
 		{
+			if (Session["user"] == null)
+				return RedirectToAction("LogIn", "Home");
+			else
+				if (((Model.User)Session["user"]).permission < (int)Model.User.PERMISSION.Admin)
+					return RedirectToAction("Index", "Home");
+
 			string where = null;
 			List<string> cond = new List<string>();
 			if (!id.Equals(null))
@@ -170,6 +192,12 @@ namespace Asp.netMVC.Controllers
 		[HttpPost]
 		public ActionResult EditTheRecord(Guid id, UrlInfo theModel)
 		{
+			if (Session["user"] == null)
+				return RedirectToAction("LogIn", "Home");
+			else
+				if (((Model.User)Session["user"]).permission < (int)Model.User.PERMISSION.Admin)
+					return RedirectToAction("Index", "Home");
+
 			Model.UrlInfo model = new Model.UrlInfo();
 			if (theModel.Region == null || theModel.Url == null)
 			{
@@ -184,11 +212,23 @@ namespace Asp.netMVC.Controllers
 		}
 		public ActionResult AddOneRecord()
 		{
+			if (Session["user"] == null)
+				return RedirectToAction("LogIn", "Home");
+			else
+				if (((Model.User)Session["user"]).permission < (int)Model.User.PERMISSION.Admin)
+					return RedirectToAction("Index", "Home");
+
 			return View();
 		}
 		[HttpPost]
 		public ActionResult AddOneRecord(UrlInfo theModel)
 		{
+			if (Session["user"] == null)
+				return RedirectToAction("LogIn", "Home");
+			else
+				if (((Model.User)Session["user"]).permission < (int)Model.User.PERMISSION.Admin)
+					return RedirectToAction("Index", "Home");
+
 			Model.UrlInfo model = new Model.UrlInfo();
 			if (model == null) return View();
 			if (theModel.Region == null || theModel.Url == null)
@@ -205,6 +245,12 @@ namespace Asp.netMVC.Controllers
 
 		public ActionResult DeleteTheRecord(Guid? id)
 		{
+			if (Session["user"] == null)
+				return RedirectToAction("LogIn", "Home");
+			else
+				if (((Model.User)Session["user"]).permission < (int)Model.User.PERMISSION.Admin)
+					return RedirectToAction("Index", "Home");
+
 			string where = null;
 			List<string> cond = new List<string>();
 			if (!id.Equals(null))
@@ -223,6 +269,12 @@ namespace Asp.netMVC.Controllers
 		[ValidateAntiForgeryToken]
 		public ActionResult DeleteTheRecord(String id)
 		{
+			if (Session["user"] == null)
+				return RedirectToAction("LogIn", "Home");
+			else
+				if (((Model.User)Session["user"]).permission < (int)Model.User.PERMISSION.Admin)
+					return RedirectToAction("Index", "Home");
+
 			string where = null;
 			List<string> cond = new List<string>();
 			if (id != null)

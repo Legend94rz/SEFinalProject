@@ -6,9 +6,14 @@ namespace Asp.netMVC.Controllers
 	public class DataAnalysisController : Controller
 	{
 		// GET: DataAnalysis
-		public ActionResult Analysis(string name, string com, string lowTime, string highTime, int? lowMoney, int? highMoney  )
+		public ActionResult Analysis(string name, string com, string lowTime, string highTime, int? lowMoney, int? highMoney)
 		{
-			//Todo : 权限
+			if (Session["user"] == null)
+				return RedirectToAction("LogIn", "Home");
+			else
+				if (((Model.User)Session["user"]).permission < (int)Model.User.PERMISSION.Ordinary)
+					return RedirectToAction("Index", "Home");
+
 			string where = null;
 			List<string> cond = new List<string>();
 			if (name != null && name != "ALL" && name!="")
