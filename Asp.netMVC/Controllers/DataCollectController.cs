@@ -17,7 +17,7 @@ namespace Asp.netMVC.Controllers
 			Thread.Sleep(1000);	//模拟采集
 		}
 	}
-	public class DataCollectController : Controller
+	public class DataCollectController : AsyncController
 	{
 		// GET: DataCollect
 		public ActionResult Collect()

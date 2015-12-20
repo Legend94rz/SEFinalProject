@@ -4,14 +4,14 @@
 }
 @model List<Model.UrlInfo>
 
-<h2>在这里列出所有网址，每条网址前有多选框，以及一个开始采集按钮（采集进度视情况写或不写）</h2>
+@*<h2>在这里列出所有网址，每条网址前有多选框，以及一个开始采集按钮（采集进度视情况写或不写）</h2>
 <h2>点击按钮，开始爬每个选中的网址</h2>
-<h2>每搜集到一个数据，写进数据库(Data表)</h2>
+<h2>每搜集到一个数据，写进数据库(Data表)</h2>*@
 
-
-@using (Html.BeginForm("Collect", "DataCollect", FormMethod.Post,new { onsubmit= "hidebtn()" }))
+<h2 class="sub-header">选择采集目标网址：</h2>
+@using (Html.BeginForm("Collect", "DataCollect", FormMethod.Post, new { onsubmit = "hidebtn()" }))
 {
-	<table border="1">
+	<table class="table table-striped">
 		<tr>
 			<td>
 				选择
@@ -21,6 +21,9 @@
 			</td>
 			<td>
 				网址
+			</td>
+			<td>
+				进度
 			</td>
 		</tr>
 
@@ -36,14 +39,22 @@
 				<td>
 					@Model[i].Url
 				</td>
+				<td style="min-width:200px">
+					<div class="progress">
+						<div tag="bars" class="progress-bar progress-bar-striped" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width: 100%">
+						</div>
+					</div>
+				</td>
 			</tr>
 		}
 	</table>
-	<button class="btn btn-default btn-lg" type="submit" id="start">开始采集</button>
+	<div class="row right text-right">
+		<button class="btn btn-default" type="submit" id="start">开始采集</button>
+	</div>
 }
 <script>
-	function hidebtn()
-	{
+	function hidebtn() {
 		$("#start").remove()
+		$(".progress-bar").addClass("active");
 	}
 </script>
