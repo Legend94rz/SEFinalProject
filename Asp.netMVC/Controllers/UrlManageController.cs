@@ -182,7 +182,7 @@ namespace Asp.netMVC.Controllers
 			}
 			where = cond[0];
 			List<Model.UrlInfo> allRecord = DAL.UrlInfo.Get(where).ToList();
-			Models.UrlInfo model = new Models.UrlInfo();
+			Model.UrlInfo model = new Model.UrlInfo();
 			model.Id = allRecord[0].Id;
 			model.Region = allRecord[0].Region;
 			model.Url = allRecord[0].Url;
@@ -190,7 +190,7 @@ namespace Asp.netMVC.Controllers
 			return View(model);
 		}
 		[HttpPost]
-		public ActionResult EditTheRecord(Guid id, UrlInfo theModel)
+		public ActionResult EditTheRecord(Guid id, Model.UrlInfo theModel)
 		{
 			if (Session["user"] == null)
 				return RedirectToAction("LogIn", "Home");
@@ -221,7 +221,7 @@ namespace Asp.netMVC.Controllers
 			return View();
 		}
 		[HttpPost]
-		public ActionResult AddOneRecord(UrlInfo theModel)
+		public ActionResult AddOneRecord(Model.UrlInfo theModel)
 		{
 			if (Session["user"] == null)
 				return RedirectToAction("LogIn", "Home");
@@ -259,7 +259,7 @@ namespace Asp.netMVC.Controllers
 			}
 			where = cond[0];
 			List<Model.UrlInfo> allRecord = DAL.UrlInfo.Get(where);
-			UrlInfo model = new UrlInfo();
+			Model.UrlInfo model = new Model.UrlInfo();
 			model.Id = allRecord[0].Id;
 			model.Region = allRecord[0].Region;
 			model.Url = allRecord[0].Url;
