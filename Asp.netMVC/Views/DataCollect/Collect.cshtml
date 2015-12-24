@@ -2,6 +2,7 @@
 @{
 	ViewBag.Title = "数据采集";
 }
+@using Model
 @model List<Model.UrlInfo>
 
 @*<h2>在这里列出所有网址，每条网址前有多选框，以及一个开始采集按钮（采集进度视情况写或不写）</h2>
@@ -9,8 +10,6 @@
 <h2>每搜集到一个数据，写进数据库(Data表)</h2>*@
 
 <h2 class="sub-header">选择采集目标网址：</h2>
-@using (Html.BeginForm("Collect", "DataCollect", FormMethod.Post, new { onsubmit = "hidebtn()" }))
-{
 	<table class="table table-striped">
 		<tr>
 			<td>
@@ -23,7 +22,7 @@
 				网址
 			</td>
 			<td>
-				进度
+				状态
 			</td>
 		</tr>
 
@@ -39,22 +38,78 @@
 				<td>
 					@Model[i].Url
 				</td>
-				<td style="min-width:200px">
-					<div class="progress">
-						<div tag="bars" class="progress-bar progress-bar-striped" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width: 100%">
-						</div>
-					</div>
+				<td>
+					<text id="@Model[i].Id.ToString()">未开始</text>
 				</td>
 			</tr>
 		}
 	</table>
-	<div class="row right text-right">
-		<button class="btn btn-default" type="submit" id="start">开始采集</button>
-	</div>
-}
+	@if (Session["user"] != null && ((User)Session["user"]).permission >= 2)
+	{
+		<div class="row right text-right">
+			<button class="btn btn-default" id="start" onclick="switchbtn()">开始采集</button>
+		</div>
+	}
+
 <script>
-	function hidebtn() {
-		$("#start").remove()
-		$(".progress-bar").addClass("active");
+	var ID;
+	var finished;
+	function getSelectUrl() {
+		ulist = [];
+		finished = {};
+		var boxes = document.getElementsByClassName("checkbox");
+		for (var i = 0; i < boxes.length; i++)
+		{
+			if (boxes[i].checked) {
+				ulist.push(boxes[i].name);
+				finished[boxes[i].name] = false;
+			}
+		}
+		return ulist;
+	}
+	function startMonitoring() {
+		$.post("/DataCollect/Collect", { optCode: 1 }, function (data, textStatus, jqXHR) {
+			for (var i = 0; i < data.length; i++) {
+				var textid = "#";
+				textid = textid + data[i].id;
+				if (!data[i].status)
+					$(textid).text(data[i].count);
+				else {
+					finished[data[i].id] = true;
+					$(textid).text("采集完成，共：" + data[i].count);
+					var count = 0;
+					for (var j = 0; j < ulist.length; j++)
+					{
+						if (!finished[ulist[j]])
+							count++;
+					}
+					if (count == 0) {
+						clearInterval(ID);
+						$("#start").text("开始采集");
+					}
+				}
+			}
+		}, "json");
+	}
+
+	function switchbtn() {
+		if ($("#start").text() == "开始采集") {
+			$("#start").text("停止采集");
+			ulist = getSelectUrl();
+
+			$.ajax({
+				url: "/DataCollect/Collect",
+				type: "POST",
+				dataType: "json",
+				data: {optCode:0,ids:ulist}
+			});
+
+			ID=setInterval("startMonitoring()", 500);
+		}
+		else {
+			$("#start").text("开始采集");
+			$.post("/DataCollect/Collect", { optCode: 2 }, null, "json");
+			clearInterval(ID);
+		}
 	}
 </script>
