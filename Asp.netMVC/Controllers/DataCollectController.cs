@@ -33,7 +33,7 @@ namespace Asp.netMVC.Controllers
 		private static Dictionary<Guid, CrawlerInfo> dict;
 		private static void DO(CrawlerInfo ci)
 		{
-			for (int i = 0; i < 10; i++)
+			for (int i = 0; i < 50; i++)
 			{
 				if (!ci.Ct.IsCancellationRequested)
 				{

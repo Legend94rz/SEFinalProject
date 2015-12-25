@@ -54,6 +54,15 @@
 <script>
 	var ID;
 	var finished;
+	var INTERVAL = 1000;
+	function Complete() {
+		var count = 0;
+		for (var j = 0; j < ulist.length; j++) {
+			if (!finished[ulist[j]])
+				count++;
+		}
+		return count == 0;
+	}
 	function getSelectUrl() {
 		ulist = [];
 		finished = {};
@@ -70,20 +79,27 @@
 	function startMonitoring() {
 		$.post("/DataCollect/Collect", { optCode: 1 }, function (data, textStatus, jqXHR) {
 			for (var i = 0; i < data.length; i++) {
-				var textid = "#";
-				textid = textid + data[i].id;
-				if (!data[i].status)
+				var textid = "#" + data[i].id;
+				if (!data[i].status) {
+					var ST =parseInt($(textid).text(),10);
+					if(isNaN(ST))
+						ST = 0;
 					$(textid).text(data[i].count);
+					var options = {
+						useEasing: false,
+						useGrouping: false,
+						separator: ',',
+						decimal: '.',
+						prefix: '',
+						suffix: ''
+					};
+					var demo = new CountUp(data[i].id, ST, data[i].count, 0, 0.8, options);
+					demo.start();
+				}
 				else {
 					finished[data[i].id] = true;
 					$(textid).text("采集完成，共：" + data[i].count);
-					var count = 0;
-					for (var j = 0; j < ulist.length; j++)
-					{
-						if (!finished[ulist[j]])
-							count++;
-					}
-					if (count == 0) {
+					if (Complete()) {
 						clearInterval(ID);
 						$("#start").text("开始采集");
 					}
@@ -104,7 +120,7 @@
 				data: {optCode:0,ids:ulist}
 			});
 
-			ID=setInterval("startMonitoring()", 500);
+			ID=setInterval("startMonitoring()", INTERVAL);
 		}
 		else {
 			$("#start").text("开始采集");
