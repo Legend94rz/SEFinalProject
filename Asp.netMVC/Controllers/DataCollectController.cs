@@ -28,10 +28,10 @@ namespace Asp.netMVC.Controllers
 		}
 	}
 
-	static class Crawler
+	class Crawler
 	{
-		private static Dictionary<Guid, CrawlerInfo> dict;
-		private static void DO(CrawlerInfo ci)
+		private Dictionary<Guid, CrawlerInfo> dict;
+		private void DO(CrawlerInfo ci)
 		{
 			for (int i = 0; i < 50; i++)
 			{
@@ -47,7 +47,7 @@ namespace Asp.netMVC.Controllers
 					break;
 			}
 		}
-		public static void Start(List<UrlInfo> urls)
+		public void Start(List<UrlInfo> urls)
 		{
 			dict = new Dictionary<Guid, CrawlerInfo>();
 			foreach (UrlInfo url in urls)
@@ -58,11 +58,11 @@ namespace Asp.netMVC.Controllers
 				dict.Add(url.Id, s);
 			}
 		}
-		public static Dictionary<Guid, CrawlerInfo> GetStatus()
+		public Dictionary<Guid, CrawlerInfo> GetStatus()
 		{
 			return dict;
 		}
-		public static void Stop()
+		public void Stop()
 		{
 			foreach (var item in dict)
 			{
@@ -97,15 +97,17 @@ namespace Asp.netMVC.Controllers
 						s += $",'{ids[i]}'";
 					}
 					List<UrlInfo> urls = DAL.UrlInfo.Get($"id in ({s})");
-					Crawler.Start(urls);
+					var crawer = new Crawler();
+					Session["crawer"] = crawer;
+					crawer.Start(urls);
 				}
 			}
 			else if(optCode==2)	//结束
 			{
-				Crawler.Stop();
+				((Crawler)Session["crawer"]).Stop();
 			}
 			var res = new JsonResult();
-			var dict = Crawler.GetStatus();
+			var dict = ((Crawler)Session["crawer"]).GetStatus();
 			List<object> list = new List<object>();
 			foreach (var item in dict)
 			{
