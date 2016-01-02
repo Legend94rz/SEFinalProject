@@ -41,21 +41,14 @@ namespace Asp.netMVC.Controllers
 	{
 		private Dictionary<Guid, CrawlerInfo> dict;
 		private void DO(CrawlerInfo ci) {
-		    var c = new NCrawler.Crawler(new Uri(ci.url.Url), new HtmlDocumentProcessor(),
+            var uri = new Uri(ci.url.Url);
+            var siteType = HtmlParse.RecogSite(uri);
+		    var c = new NCrawler.Crawler(uri, new HtmlDocumentProcessor(),
 		        new MyPipelineStep(ci)) {
-		            MaximumCrawlDepth = 2,
+		            MaximumCrawlDepth = CrawlArgs.CrawlDepth(siteType),
 		            MaximumThreadCount = 5,
-                    IncludeFilter = new[] {
-                        new RegexFilter(
-                            new Regex("jxzbw/zfcg/017002"))
-                    },
-                    ExcludeFilter = new[] {
-                        new RegexFilter(
-                            new Regex(@"(\.jpg|\.css|\.js|\.gif|\.jpeg|\.png|\.ico)",
-                                RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase)),
-                        new RegexFilter(
-                            new Regex("jxzbw/zfcg"))
-                    },
+                    IncludeFilter = CrawlArgs.IncludeFilter(siteType),
+                    ExcludeFilter = CrawlArgs.ExcludeFilter(siteType),
             };
             c.Crawl();
         }
@@ -83,29 +76,7 @@ namespace Asp.netMVC.Controllers
 		}
 	}
 
-    class BiddingRecord
-    {
-        public string Product = null;
-        public string Amount = null;
-        public string Facility = null;
-        public string Money = null;
-        public string Date = null;
-
-        public string Print()
-        {
-            return $"{NullToken(Product)}\t" +
-                   $"{NullToken(Amount)}\t" +
-                   $"{NullToken(Facility)}\t" +
-                   $"{NullToken(Money)}";
-        }
-
-        private string NullToken(string str)
-        {
-            return str ?? "NULL";
-        }
-    }
-
-    class MyPipelineStep : IPipelineStep {
+    class MyPipelineStep : IPipelineStep{
         public MyPipelineStep(CrawlerInfo aCrawlerInfo) {
             ci = aCrawlerInfo;
         }
@@ -116,22 +87,19 @@ namespace Asp.netMVC.Controllers
             try
             {
                 HtmlDocument htmlDoc = HtmlParse.LoadFromHtml(propertyBag);
-                var title = HtmlParse.ParseTitle(htmlDoc);
-                if (!(Regex.IsMatch(title, "公告") && title.Length > 8))
-                {
+                var siteType = HtmlParse.RecogSite(propertyBag.ResponseUri);
+                var records = Parse(htmlDoc, siteType);
+                if (records == null)
                     return;
-                }
-                ci.Count++;
-                var records = Parse(htmlDoc);
-                foreach (var record in records) {
+                foreach (var record in records)
+                {
                     DAL.Data.Add(record);
+                    ++ci.Count;
                 }
             }
             catch (NullReferenceException)
             {
-                ;
             }
-            //Console.WriteLine(propertyBag.ResponseUri);
         }
 
         private enum ContentType
@@ -141,94 +109,109 @@ namespace Asp.netMVC.Controllers
             Unrecognized
         }
 
-
-        public static List<Model.Data> Parse(HtmlDocument doc)
+        public static List<Model.Data> Parse(HtmlDocument doc, SiteType siteType)
         {
             var result = new List<Model.Data>();
-            var docNode = doc.DocumentNode;
-            //从标题提取产品信息
-            var product = HtmlParse.ParseProjectName(HtmlParse.ParseTitle(doc));
-            var amounts = new List<string>();
-            var facilities = new List<string>();
-            var moneys = new List<string>();
-            var date = "";
-            var contentType = ContentType.Unrecognized;
-
-            //尝试按表格型解析
-            if (contentType == ContentType.Unrecognized)
+            var title = HtmlParse.ParseTitle(doc, siteType);
+            var rootNode = doc.DocumentNode;
+            if (title.Length < 8 || !Regex.IsMatch(title, "(公告|公示|中标)") || Regex.IsMatch(title, "(流标|废标)"))
             {
-                foreach (var table in docNode.SelectNodes("//table"))
+                return null;
+            }
+            //Console.WriteLine($"\t{MyPipelineStep.count++}");
+            var contentType = ContentType.Unrecognized;
+            HtmlNode contentNode = null;
+            switch (siteType)
+            {
+                case SiteType.NanChang:
+                    contentNode = rootNode.SelectSingleNode("//table[@class='MsoNormalTable']");
+                    contentType = ContentType.Table;
+                    break;
+                case SiteType.JingDeZhen:
+                    contentNode = rootNode.SelectSingleNode("//*[@id='MyContent']");
+                    contentType = ContentType.Paragraph;
+                    break;
+                case SiteType.JiangXi:
+                    contentType = ContentType.Table;
+                    contentNode = rootNode.SelectSingleNode("//*[@id='TDContent']//*[@class='MsoNormalTable']");
+                    break;
+                case SiteType.PinXiang:
+                    contentNode = rootNode.SelectSingleNode("//table[@align='center'//talbe[@align='center']");
+                    contentType = ContentType.Table;
+                    break;
+                case SiteType.GanZhou:
+                    contentNode = rootNode.SelectSingleNode("//table[@class='MsoNormalTable']");
+                    contentType = ContentType.Table;
+                    break;
+                case SiteType.FuZhou:
+                    contentNode = rootNode.SelectSingleNode("//body");
+                    contentType = ContentType.Paragraph;
+                    break;
+                default:
+                    return null;
+            }
+
+            var product = HtmlParse.ParseProjectName(title);
+            var facilities = new List<string>();
+            var money = 0;
+            var date = HtmlParse.ParseDate(doc, siteType);
+
+            //按表格型解析
+            if (contentType == ContentType.Table)
+            {
+                if (contentNode == null) return result;
+                var table = contentNode;
+                var content = HtmlParse.ParseTable(table);
+                if (content.ContainsKey("Title") && content["Title"].Count > 0)
                 {
-                    if (Regex.IsMatch(table.InnerText, "中标|供应商|项目|招标"))
+                    product = product ?? content["Title"][0];
+                }
+                foreach (var item in content)
+                {
+                    if (Regex.IsMatch(item.Key, "商|单位|公司"))
                     {
-                        var content = HtmlParse.ParseTable(table);
-                        if (content.ContainsKey("Title") && content["Title"].Count > 0)
-                        {
-                            product = product ?? content["Title"][0];
-                        }
-                        foreach (var item in content)
-                        {
-                            if (Regex.IsMatch(item.Key, "数量"))
-                            {
-                                amounts = item.Value;
-                            }
-                            else if (Regex.IsMatch(item.Key, "商|单位|公司"))
-                            {
-                                facilities = item.Value;
-                            }
-                            else if (Regex.IsMatch(item.Key, "金额"))
-                            {
-                                moneys = item.Value;
-                            }
-                        }
-                        //按表格解析成功
-                        contentType = ContentType.Table;
+                        facilities = item.Value;
+                    }
+                    else if (Regex.IsMatch(item.Key, "金额"))
+                    {
+                        money = item.Value.Count > 0 ? HtmlParse.ParseMoney(item.Value[0]) : 0;
                     }
                 }
             }
-            //尝试按文本型解析
-            if (contentType == ContentType.Unrecognized)
+            else if (contentType == ContentType.Paragraph)
             {
-                var content = docNode.SelectSingleNode("//div[@class='content']");
-                content = content ?? docNode.SelectSingleNode("body");
-                facilities = HtmlParse.ParseText(content.InnerText, new Regex("公司"));
+                //按文本型解析
+                var text = contentNode.InnerText;
+                facilities = HtmlParse.ParseFacilities(text);
+                money = HtmlParse.ParseMoney(text);
             }
-            var count = Math.Max(amounts.Count, Math.Max(facilities.Count, moneys.Count));
-            while (amounts.Count < count)
+            var count = facilities.Count;
+            if (product == null)
             {
-                amounts.Add(null);
+                //Console.WriteLine($"\n{title}\n");
+                return null;
             }
-            while (facilities.Count < count)
+            for (int i = 0; i != facilities.Count; ++i)
             {
-                facilities.Add(null);
-            }
-            while (moneys.Count < count)
-            {
-                moneys.Add(null);
+                facilities[i] = Regex.Replace(facilities[i], "&nbsp;", "");
+                if (facilities[i].Length < 5) {
+                    facilities[i] = null;
+                }
             }
             for (var i = 0; i < count; i++)
             {
                 try
                 {
-                    int money;
-                    int.TryParse(moneys[i], out money);
-                    DateTime time;
-                    DateTime.TryParse(date, out time);
-                    if (product == null)
-                    {
-                        continue;
-                    }
                     result.Add(new Model.Data()
                     {
                         ProjectName = product ?? "NULL",
                         WinCom = facilities[i] ?? "NULL",
                         Money = money,
-                        Time = time,
+                        Time = date,
                     });
                 }
                 catch (FormatException)
                 {
-
                 }
             }
             return result;
@@ -287,7 +270,67 @@ namespace Asp.netMVC.Controllers
 			return res;
 		}
 	}
-    
+
+
+    public enum SiteType { Unknown, JiangXi, NanChang, JingDeZhen, PinXiang, GanZhou, ShangRao, FuZhou };
+    public class CrawlArgs
+    {
+        public static int CrawlDepth(SiteType siteType)
+        {
+            switch (siteType)
+            {
+                case SiteType.NanChang:
+                    return 3;
+                default:
+                    return 10;
+            }
+        }
+        public static List<RegexFilter> IncludeFilter(SiteType siteType)
+        {
+            var filter = new List<RegexFilter>();
+            switch (siteType)
+            {
+                case SiteType.JiangXi:
+                    filter.Add(new RegexFilter(new Regex(@"zfcg/017002/017002004/")));
+                    filter.Add(new RegexFilter(new Regex(@"ZtbInfo")));
+                    break;
+                case SiteType.FuZhou:
+                    filter.Add(new RegexFilter(new Regex(@"index_629")));
+                    filter.Add(new RegexFilter(new Regex(@"zbgs")));
+                    break;
+                case SiteType.ShangRao:
+                    filter.Add(new RegexFilter(new Regex(@"/tzgg/zggg/")));
+                    filter.Add(new RegexFilter(new Regex(@"db/")));
+                    break;
+                case SiteType.GanZhou:
+                    filter.Add(new RegexFilter(new Regex(@"products.asp")));
+                    filter.Add(new RegexFilter(new Regex(@"Productsviwe.asp")));
+                    break;
+                case SiteType.JingDeZhen:
+                    filter.Add(new RegexFilter(new Regex(@"html/2")));
+                    filter.Add(new RegexFilter(new Regex(@"html/list_1433")));
+                    break;
+                case SiteType.NanChang:
+                    filter.Add(new RegexFilter(new Regex(@"more.cfm\?sid=100002011")));
+                    filter.Add(new RegexFilter(new Regex(@"article.cfm")));
+                    break;
+            }
+            return filter;
+        }
+
+        public static List<RegexFilter> ExcludeFilter(SiteType siteType)
+        {
+            var filter = new List<RegexFilter>();
+            switch (siteType)
+            {
+                default:
+                    filter.Add(new RegexFilter(new Regex(@".*")));
+                    break;
+            }
+            return filter;
+        }
+    }
+
     class HtmlParse
     {
         public static HtmlDocument LoadFromHtml(PropertyBag propertyBag)
@@ -325,7 +368,6 @@ namespace Asp.netMVC.Controllers
             }
 
         }
-
         /// <summary>
         /// 输入table节点, 按表头解析表格
         /// 如存在标题, 返回值中以Title为键存放
@@ -382,7 +424,7 @@ namespace Asp.netMVC.Controllers
                 }
                 if (content.ContainsKey(items[0]))
                 {
-                    Console.WriteLine($"Repeat Key: {items[0]}");
+                    // TODO Console.WriteLine($"Repeat Key: {items[0]}");
                     continue;
                 }
                 string key = items[0];
@@ -392,42 +434,184 @@ namespace Asp.netMVC.Controllers
             return content;
         }
 
-        public static List<string> ParseText(string text, Regex regex)
+        public static List<string> ParseFacilities(string text)
         {
+            var regex = new Regex(@".{2}(市|县|省).{0,10}(公司|部)");
             var content = new List<string>();
-            var lines = text.Split('\n');
+            List<string> lines = new List<string>(text.Split('\n'));
+            lines.RemoveAll(x => x.Length < 5);
             foreach (var line in lines)
             {
-                if (regex.IsMatch(line))
+                var match = regex.Match(line);
+                if (match.Success)
                 {
-                    var info = Regex.Replace(line, "\\s+", " ");
-                    content.Add(info);
+                    content.Add(match.Value);
+                }
+            }
+            if (content.Count == 0)
+            {
+                foreach (var line in lines)
+                {
+                    if (Regex.IsMatch(line, "(公司|部)") && line.Length < 20)
+                    {
+                        var t = Regex.Replace(line, @"(\s|\t)+", "");
+                        content.Add(t);
+                    }
                 }
             }
             return content;
         }
 
-        public static string ParseTitle(HtmlDocument htmlDoc)
+        public static int ParseMoney(string text)
+        {
+            var money = 0;
+            var regex = new Regex(@"[0-9.,]+千?万?元");
+            var lines = text.Split('\n');
+            foreach (var line in lines)
+            {
+                var match = regex.Match(line);
+                if (match.Success)
+                {
+                    float n;
+                    var t = Regex.Match(match.Value, @"[0-9.,]+").Value;
+                    t = Regex.Replace(t, ",", "");
+                    float.TryParse(t, out n);
+                    if (match.Value.Contains("万"))
+                    {
+                        n *= 10000;
+                    }
+                    else if (match.Value.Contains("千"))
+                    {
+                        n *= 1000;
+                    }
+                    if (n > money)
+                        money = (int)n;
+                }
+            }
+            return money;
+        }
+
+        public static string GetFirstLine(string text, Regex regex)
+        {
+            var lines = text.Split('\n');
+            foreach (var line in lines)
+            {
+                if (regex.IsMatch(line))
+                {
+                    return line;
+                }
+            }
+            return null;
+        }
+
+        public static SiteType RecogSite(Uri aUri)
+        {
+            string uri = aUri.AbsoluteUri;
+            SiteType type = SiteType.Unknown;
+            if (uri.Contains("ncszfcg.gov"))
+            {
+                type = SiteType.NanChang;
+            }
+            else if (uri.Contains("caigou.jdzol"))
+            {
+                type = SiteType.JingDeZhen;
+            }
+            else if (uri.Contains("bmwz.pingxiang"))
+            {
+                type = SiteType.PinXiang;
+            }
+            else if (uri.Contains("gzzfcg.gov"))
+            {
+                type = SiteType.GanZhou;
+            }
+            else if (uri.Contains("srzfcg.gov"))
+            {
+                type = SiteType.ShangRao;
+            }
+            else if (uri.Contains("fzztb.gov"))
+            {
+                type = SiteType.FuZhou;
+            }
+            else if (uri.Contains("ggzy.jiangxi"))
+            {
+                type = SiteType.JiangXi;
+            }
+            return type;
+        }
+
+        public static string ParseTitle(HtmlDocument htmlDoc, SiteType site)
         {
             var rootNode = htmlDoc.DocumentNode;
-            var titleNode = htmlDoc.DocumentNode.SelectSingleNode("//h2");
-            titleNode = titleNode ?? rootNode.SelectSingleNode("//span[@id='lblTitle']");
-            titleNode = titleNode ?? rootNode.SelectSingleNode("//td[@class='article_bt']");
-            titleNode = titleNode ?? rootNode.SelectSingleNode("//span[@class='news_title']");
-            titleNode = titleNode ?? rootNode.SelectSingleNode("//p[@align='center']");
-            titleNode = titleNode ?? rootNode.SelectSingleNode("//div[@align='center']");
+            HtmlNode titleNode = null;
+            switch (site)
+            {
+                case SiteType.JiangXi:
+                    titleNode = rootNode.SelectSingleNode("//*[@id='lblTitle']");
+                    break;
+                case SiteType.JingDeZhen:
+                    titleNode = rootNode.SelectSingleNode("//h2");
+                    break;
+                case SiteType.GanZhou:
+                    titleNode = rootNode.SelectSingleNode("//div[@align='center']");
+                    break;
+                case SiteType.FuZhou:
+                    titleNode = rootNode.SelectSingleNode("//span[@class='news_title']");
+                    break;
+                case SiteType.NanChang:
+                    titleNode = rootNode.SelectSingleNode("//td[@class='article_bt']");
+                    break;
+                default:
+                    break;
+            }
             return titleNode == null ? "" : titleNode.InnerText;
+        }
+
+        public static DateTime ParseDate(HtmlDocument htmlDoc, SiteType site)
+        {
+            var root = htmlDoc.DocumentNode;
+            DateTime date = DateTime.MinValue;
+            var dateStr = root.SelectSingleNode("//body").InnerText;
+            var regs = new List<Regex>();
+            regs.Add(new Regex("[0-9]{4}-[0-9]{1,2}-[0-9]{2}"));
+            regs.Add(new Regex("[0-9]{4}/[0-9]{1,2}/[0-9]{2}"));
+            switch (site)
+            {
+                case SiteType.JingDeZhen:
+                    dateStr = root.SelectSingleNode("//*[@class='info']").InnerText;
+                    break;
+                case SiteType.GanZhou:
+                    //dateStr = root.SelectSingleNode("//td[@class='main']//tbody/tr[2]").InnerText;
+                    dateStr = GetFirstLine(root.InnerText, new Regex("时间"));
+                    break;
+                case SiteType.FuZhou:
+                    dateStr = GetFirstLine(root.InnerText, new Regex("来源"));
+                    break;
+                case SiteType.NanChang:
+                    dateStr = root.SelectSingleNode("//td[@class='article_date']").InnerText;
+                    break;
+                case SiteType.JiangXi:
+                    dateStr = root.SelectSingleNode("//*[@id='tdTitle']").InnerText;
+                    break;
+            }
+            if (dateStr != null)
+            {
+                foreach (var regex in regs)
+                {
+                    var match = regex.Match(dateStr);
+                    if (match.Success)
+                    {
+                        date = DateTime.Parse(match.Value);
+                        break;
+                    }
+                }
+            }
+            return date;
         }
 
         public static string ParseProjectName(string text)
         {
-            var match = Regex.Match(text, "关于\\S+[设备,工程,项目]");
-            var product = Regex.Replace(match.Value, "关于", "");
-            if (Regex.IsMatch(product, "、|，|,"))
-            {
-                //TODO 暂不支持多项记录解析
-                product = null;
-            }
+            var match = Regex.Match(text, @"[关于,市]\S{0,20}[系统,设备,工程,项目]");
+            var product = Regex.Replace(match.Value, "[关于,市]", "");
             return product == "" ? null : product;
         }
     }
