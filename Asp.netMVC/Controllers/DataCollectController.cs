@@ -204,8 +204,8 @@ namespace Asp.netMVC.Controllers
                 {
                     result.Add(new Model.Data()
                     {
-                        ProjectName = product ?? "NULL",
-                        WinCom = facilities[i] ?? "NULL",
+                        ProjectName = (product ?? "NULL").Trim(),
+                        WinCom = (facilities[i] ?? "NULL").Trim(),
                         Money = money,
                         Time = date,
                     });
