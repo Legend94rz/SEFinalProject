@@ -116,7 +116,7 @@ namespace Asp.netMVC.Controllers
 			}
 			else if (fileName.EndsWith(".txt"))
 			{//Txt TO DataBase
-				filePath = "~/App_Data/Txt/temp" + Guid.NewGuid() + ".txt";
+				filePath = "~/App_Data/" + Guid.NewGuid() + ".txt";
 				fileBase.SaveAs(Server.MapPath(filePath));
 				try
 				{
