@@ -9,6 +9,6 @@ namespace DAL
 	public static class Dal_config
 	{
 		//Todo 替换为自己的数据库连接字符串
-		public static string ConnStr = "Data Source=.\\SQLExpress;Integrated Security=True;Initial Catalog=SEFinalProject;";
+		public static string ConnStr = "Data Source=.\\SQLExpress;Integrated Security=SSPI;Persist Security Info=False;Initial Catalog=SEFinalProject;";
 	}
 }
